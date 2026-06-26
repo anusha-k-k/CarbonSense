@@ -161,10 +161,10 @@ http://127.0.0.1:5000
 
 👩‍💻 Author
 
-Anusha K K
-Deeksha
-Rishika
-Gowda Anvitha Jagadeesha
+*Anusha K K
+*Deeksha
+*Rishika
+*Gowda Anvitha Jagadeesha
 Bachelor of Computer Applications (BCA)
 
 ---
