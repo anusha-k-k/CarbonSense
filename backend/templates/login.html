@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login | CarbonSense</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-container">
+
+<h2>Welcome Back</h2>
+<p class="subtitle">Track your carbon footprint smartly</p>
+
+<form method="POST">
+
+<div class="input-group">
+<input type="email" name="email" required>
+<label>Email Address</label>
+</div>
+
+<div class="input-group">
+<input type="password" name="password" required>
+<label>Password</label>
+</div>
+
+<button type="submit" class="auth-btn">
+Login
+</button>
+
+</form>
+
+<p class="switch-text">
+Don’t have an account?
+<a href="/register">Create Account</a>
+</p>
+
+</div>
+
+</body>
+</html>

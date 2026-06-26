@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register | CarbonSense</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-container">
+
+<h2>Create Account</h2>
+
+<form method="POST">
+
+<div class="input-group">
+<input type="text" name="username" required>
+<label>Username</label>
+</div>
+
+<div class="input-group">
+<input type="email" name="email" required>
+<label>Email</label>
+</div>
+
+<div class="input-group">
+<input type="text" name="location" required>
+<label>Location</label>
+</div>
+
+<div class="input-group">
+<input type="password" name="password" required>
+<label>Password</label>
+</div>
+
+<button type="submit" class="auth-btn">
+Register
+</button>
+
+</form>
+
+<p class="switch-text">
+Already have an account?
+<a href="/login">Login</a>
+</p>
+
+</div>
+
+</body>
+</html>

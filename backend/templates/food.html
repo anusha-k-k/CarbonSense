@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<!-- HERO SECTION -->
+<div class="action-hero">
+
+<h2>You Saved</h2>
+<h1 id="foodCO2">0 kg CO₂eq</h1>
+<p>by reducing consumption of high emission food</p>
+
+</div>
+
+
+<div class="action-container">
+
+<h2>High emission foods</h2>
+
+<div class="transport-options food-group">
+
+<div class="transport-card active" onclick="selectFood(this,'poultry')">
+<img src="{{ url_for('static', filename='images/poultry.jpg') }}">
+<p>Poultry</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'seafood')">
+<img src="{{ url_for('static', filename='images/seafood.jpg') }}">
+<p>Seafood</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'meat')">
+<img src="{{ url_for('static', filename='images/meat.jpg') }}">
+<p>Meat</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'eggs')">
+<img src="{{ url_for('static', filename='images/eggs.jpg') }}">
+<p>Eggs</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'dairy')">
+<img src="{{ url_for('static', filename='images/dairy.jpg') }}">
+<p>Dairy</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'white_rice')">
+<img src="{{ url_for('static', filename='images/white rice.jpg') }}">
+<p>White Rice</p>
+</div>
+
+<div class="transport-card" onclick="selectFood(this,'packaged_foods')">
+<img src="{{ url_for('static', filename='images/packed food and drinks.jpg') }}">
+<p>Packaged Food/Drinks</p>
+</div>
+
+</div>
+
+
+<label>Weight (kg)</label>
+
+<input type="range"
+min="1"
+max="30"
+value="3"
+step="0.1"
+id="foodWeight"
+oninput="updateFoodCO2()">
+
+<p id="weightValue">3 kg</p>
+
+
+<form method="POST" action="/add_action">
+
+<input type="hidden" name="category" value="food">
+<input type="hidden" name="action_type" id="selectedFood" value="poultry">
+<input type="hidden" name="value" id="foodValue">
+
+<button type="submit">Log Action</button>
+
+</form>
+
+</div>
+
+
+<script>
+
+const foodEmissionFactors = {
+    poultry: 8,          // chicken
+    seafood: 5.5,        // farmed fish avg
+    meat: 31,            // lamb/mutton avg
+    eggs: 4.65,
+    dairy: 3,            // milk avg
+    white_rice: 4.25,
+    packaged_foods: 1.5
+};
+
+let selectedFoodType = "poultry";
+
+function selectFood(card, type){
+
+    selectedFoodType = type;
+
+    document.getElementById("selectedFood").value = type;
+
+    document.querySelectorAll(".transport-card")
+        .forEach(c => c.classList.remove("active"));
+
+    card.classList.add("active");
+
+    updateFoodCO2();
+}
+
+function updateFoodCO2() {
+
+    // Get weight (supports decimals)
+    let weight = parseFloat(
+        document.getElementById("foodWeight").value
+    ) || 0;
+
+    // Show weight with decimals
+    document.getElementById("weightValue")
+        .innerText = weight.toFixed(1) + " kg";
+
+    // Get emission factor safely
+    let factor = foodEmissionFactors[selectedFoodType] || 0;
+
+    // Calculate CO2
+    let co2 = (weight * factor).toFixed(2);
+
+    // Display result
+    document.getElementById("foodCO2")
+        .innerText = co2 + " kg CO₂eq";
+
+    document.getElementById("foodValue").value = co2;
+}
+
+
+// run once on load
+updateFoodCO2();
+
+</script>
+
+</body>
+</html>

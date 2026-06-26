@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<!-- HERO -->
+<div class="action-hero">
+  <h2>You Saved</h2>
+  <h1 id="co2value">0.00 kg CO₂eq</h1>
+  <p>by reduce, reuse, recycle of waste</p>
+</div>
+
+<div class="action-container">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(event,'wet')">Wet Waste</button>
+  <button class="tab" onclick="switchTab(event,'dry')">Dry Waste</button>
+  <button class="tab" onclick="switchTab(event,'other')">Other Waste</button>
+</div>
+
+<!-- OPTIONS -->
+<div class="transport-options" id="options"></div>
+
+<!-- ACTION DROPDOWN -->
+<select id="actionType" onchange="updateCO2()"></select>
+
+<!-- SLIDER -->
+<label>Weight (kg)</label>
+<input type="range" min="1" max="50" value="2" id="weight" oninput="updateCO2()">
+<p id="weightValue">2 kg</p>
+
+<form method="POST" action="/add_action">
+  <input type="hidden" name="category" value="waste">
+  <input type="hidden" name="action_type" id="selectedType">
+  <input type="hidden" name="value" id="weightInput">
+
+  <button type="submit">Log Action</button>
+</form>
+
+</div>
+
+<script>
+
+// DEFAULTS
+let currentTab = "wet"
+let selectedItem = "wet"
+
+// ================= DATA =================
+
+const wasteData = {
+  wet: [
+    { name: "wet", label: "Wet Waste", img: "/static/images/wet.jpg" }
+  ],
+
+  dry: [
+    { name: "plastic", label: "Plastic", img: "/static/images/plastic.jpg" },
+    { name: "paper_qty", label: "Paper (Qty)", img: "/static/images/paper_qty.jpg" },
+    { name: "paper_wt", label: "Paper (Wt)", img: "/static/images/paper_wt.jpg" }
+  ],
+
+  other: [
+    { name: "furniture", label: "Furniture", img: "/static/images/furniture.jpg" },
+    { name: "clothes", label: "Clothes", img: "/static/images/clothes.jpg" },
+    { name: "electronics", label: "Electronics", img: "/static/images/electronics.jpg" }
+  ]
+}
+
+// ================= DYNAMIC ACTION OPTIONS =================
+
+const actionOptions = {
+  wet: [
+    { value: "compost", label: "Composted" },
+    { value: "segregated", label: "Segregated for disposal" }
+  ],
+
+  dry: [
+    { value: "refuse", label: "Refused" },
+    { value: "dispose", label: "Collected & disposed sustainably" },
+    { value: "recycle", label: "Recycled" }
+  ],
+
+  other: [
+    { value: "refurbish", label: "Refurbished" },
+    { value: "donate", label: "Donated" },
+    { value: "eco", label: "Ensured Climate friendly disposal" }
+  ]
+}
+
+// ================= LOAD CARDS =================
+
+function loadOptions(){
+  const container = document.getElementById("options")
+  container.innerHTML = ""
+
+  wasteData[currentTab].forEach(item => {
+    container.innerHTML += `
+      <div class="transport-card ${item.name === selectedItem ? 'active':''}"
+           onclick="selectItem('${item.name}')">
+        <img src="${item.img}">
+        <p>${item.label}</p>
+      </div>
+    `
+  })
+}
+
+// ================= LOAD DROPDOWN =================
+
+function loadActions(){
+  const select = document.getElementById("actionType")
+  select.innerHTML = ""
+
+  actionOptions[currentTab].forEach(opt => {
+    select.innerHTML += `<option value="${opt.value}">${opt.label}</option>`
+  })
+}
+
+// ================= SWITCH TAB =================
+
+function switchTab(e, tab){
+  currentTab = tab
+  selectedItem = wasteData[tab][0].name
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"))
+  e.target.classList.add("active")
+
+  loadOptions()
+  loadActions()
+  updateCO2()
+}
+
+// ================= SELECT ITEM =================
+
+function selectItem(name){
+  selectedItem = name
+  loadOptions()
+  updateCO2()
+}
+
+// ================= CO2 CALC =================
+
+function updateCO2(){
+
+  let weight = document.getElementById("weight").value
+  let action = document.getElementById("actionType").value
+
+  document.getElementById("weightValue").innerText = weight + " kg"
+  document.getElementById("weightInput").value = weight
+
+  document.getElementById("selectedType").value = action + "_" + selectedItem
+
+  let factors = {
+    compost: 2.0,
+    segregated: 1.2,
+    recycle: 1.5,
+    reuse: 1.0,
+    refuse: 2.5,
+    refurbish: 3.0,
+    donate: 2.8,
+    eco: 2.2,
+    dispose: 1.8
+  }
+
+  let saved = weight * (factors[action] || 1)
+
+  document.getElementById("co2value").innerText =
+    saved.toFixed(2) + " kg CO₂eq"
+}
+
+// ================= INIT =================
+
+loadOptions()
+loadActions()
+updateCO2()
+
+</script>
+
+</body>
+</html>

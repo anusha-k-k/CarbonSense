@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="action-hero">
+
+<h2>You Saved</h2>
+<h1 id="co2value">0 kg CO₂eq</h1>
+<p>by using lower emission vehicles</p>
+
+</div>
+
+
+<div class="action-container">
+
+<h2>I travelled by</h2>
+
+<div class="transport-options travel-group">
+
+<div class="transport-card active" onclick="selectTransport(this,'bicycle')">
+<img src="https://images.unsplash.com/photo-1571068316344-75bc76f77890">
+<p>Bicycle</p>
+</div>
+
+<div class="transport-card" onclick="selectTransport(this,'bus')">
+<img src="{{ url_for('static', filename='images/Bus.jpg') }}">
+<p>Bus</p>
+</div>
+
+<div class="transport-card" onclick="selectTransport(this,'train')">
+<img src="{{ url_for('static', filename='images/Metro.jpg') }}">
+<p>Train / Metro</p>
+</div>
+
+<div class="transport-card" onclick="selectTransport(this,'Rickshaw')">
+<img src="{{ url_for('static', filename='images/Rickshaw.jpg') }}">
+<p>Rickshaw</p>
+</div>
+
+
+</div>
+
+<h2>Instead Of</h2>
+<div class="transport-options instead-group">
+
+<div class="transport-card active" onclick="selectInstead(this,'car')">
+<img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70">
+<p>Car</p>
+</div>
+
+<div class="transport-card" onclick="selectInstead(this,'flight')">
+<img src="{{ url_for('static', filename='images/flight.jpg') }}">
+<p>Flight</p>
+</div>
+
+</div>
+
+
+<label>Distance (km)</label>
+
+<input type="range" min="1" max="100" value="10" id="distance" oninput="updateCO2()">
+
+<p id="distanceValue">10 km</p>
+
+
+<form method="POST" action="/add_action">
+
+<input type="hidden" name="category" value="travel">
+<input type="hidden" name="action_type" id="selectedTransport" value="bicycle">
+<input type="hidden" name="value" id="distanceInput">
+
+<button type="button" onclick="logAction()">Log Action</button>
+
+</form>
+
+</div>
+
+
+<script>
+
+function selectTransport(card,type){
+
+const group = document.querySelector(".travel-group")
+
+group.querySelectorAll(".transport-card")
+.forEach(c => c.classList.remove("active"))
+
+card.classList.add("active")
+
+document.getElementById("selectedTransport").value = type
+}
+
+
+function selectInstead(card,type){
+
+const group = document.querySelector(".instead-group")
+
+group.querySelectorAll(".transport-card")
+.forEach(c => c.classList.remove("active"))
+
+card.classList.add("active")
+}
+
+function updateCO2(){
+
+let distance = document.getElementById("distance").value
+
+document.getElementById("distanceValue").innerText = distance + " km"
+
+document.getElementById("distanceInput").value = distance
+
+let co2 = (distance * 0.21).toFixed(2)
+
+document.getElementById("co2value").innerText = co2 + " kg CO₂eq"
+
+}
+
+
+function logAction(){
+
+let distance = document.getElementById("distance").value
+
+document.getElementById("distanceInput").value = distance
+
+let co2 = (distance * 0.21).toFixed(2)
+
+document.getElementById("co2value").innerText = co2 + " kg CO₂eq"
+
+document.querySelector("form").submit()
+
+}
+
+</script>
+
+</body>
+</html>

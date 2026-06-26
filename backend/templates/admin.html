@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel | CarbonSense</title>
+<style>
+    .dashboard-container {
+  margin-top: 100px;
+}
+</style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body style="background:#111; color:white;">
+
+{% include 'navbar.html' %}
+
+<div class="dashboard-container">
+
+<h1>Admin Dashboard</h1>
+
+<!-- STATS -->
+<div class="cards">
+
+<div class="card">
+<h3>Total Users</h3>
+<p>{{ total_users }}</p>
+</div>
+
+<div class="card">
+<h3>Total CO₂ Saved</h3>
+<p>{{ total_co2 }} kg</p>
+</div>
+
+<div class="card">
+<h3>Total Actions</h3>
+<p>{{ total_actions }}</p>
+</div>
+
+</div>
+
+<!-- CHART -->
+<canvas id="chart" style="max-width:500px; margin:30px auto;"></canvas>
+
+<script>
+new Chart(document.getElementById("chart"), {
+  type: 'bar',
+  data: {
+    labels: ["Users", "Actions"],
+    datasets: [{
+      label: "System Stats",
+      data: [{{ total_users }}, {{ total_actions }}]
+    }]
+  }
+});
+</script>
+
+<!-- USERS TABLE -->
+<h2>Users</h2>
+
+<table border="1" width="100%">
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Email</th>
+<th>Action</th>
+</tr>
+
+{% for u in user_list %}
+<tr>
+<td>{{ u.id }}</td>
+<td>{{ u.username }}</td>
+<td>{{ u.email }}</td>
+<td>
+<a href="/delete_user/{{ u.id }}">Delete</a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+
+<!-- ACTIONS TABLE -->
+<h2>Actions</h2>
+
+<table border="1" width="100%">
+<tr>
+<th>ID</th>
+<th>User ID</th>
+<th>Category</th>
+<th>Type</th>
+<th>CO₂ Saved</th>
+<th>Action</th>
+</tr>
+
+{% for a in actions_list %}
+<tr>
+<td>{{ a.id }}</td>
+<td>{{ a.user_id }}</td>
+<td>{{ a.category }}</td>
+<td>{{ a.action_type }}</td>
+<td>{{ a.carbon_saved }}</td>
+<td>
+<a href="/delete_action/{{ a.id }}">Delete</a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+</html>

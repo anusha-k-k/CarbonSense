@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+{% include "navbar.html" %}
+
+<div class="section">
+<h2>Carbon Report</h2>
+<div class="chart-box">
+    <canvas id="reportChart"></canvas>
+</div>
+</div>
+
+<script>
+
+const dataFromBackend = JSON.parse('{{ data | tojson | safe }}');
+
+if (!dataFromBackend || dataFromBackend.length === 0) {
+    document.getElementById("reportChart").outerHTML =
+        "<p style='text-align:center;'>No data yet. Add actions first.</p>";
+} else {
+
+    const labels = dataFromBackend.map(item => item.category);
+    const values = dataFromBackend.map(item => item.total);
+
+    new Chart(document.getElementById('reportChart'), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Carbon Saved',
+                data: values
+            }]
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>

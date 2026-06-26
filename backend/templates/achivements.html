@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+{% include "navbar.html" %}
+
+<div class="section">
+
+<h2>Your Achievements</h2>
+
+<p>Total Carbon Saved: {{ total }} kg</p>
+
+<h3>Badges</h3>
+
+{% if badges %}
+    {% for badge in badges %}
+        <p>{{ badge }}</p>
+    {% endfor %}
+{% else %}
+    <p>No achievements yet. Start saving carbon!</p>
+{% endif %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<!-- HERO -->
+<div class="action-hero">
+  <h2>You Saved</h2>
+  <h1 id="co2value">0 kg CO₂eq</h1>
+  <p>by reducing energy usage</p>
+</div>
+
+
+<div class="action-container">
+
+<!-- TABS -->
+<div class="energy-tabs">
+  <div class="tab active" onclick="switchTab('hvac', this)">HVAC</div>
+  <div class="tab" onclick="switchTab('lighting', this)">Lighting</div>
+  <div class="tab" onclick="switchTab('appliances', this)">Appliances</div>
+</div>
+
+<!-- CONTENT -->
+<div id="energyContent"></div>
+
+<form method="POST" action="/add_action">
+  <input type="hidden" name="category" value="energy">
+  <input type="hidden" name="action_type" id="energyType">
+  <input type="hidden" name="value" id="energyValueInput">
+
+  <button type="submit">Log Action</button>
+</form>
+
+</div>
+
+
+<script>
+
+let selectedFactor = 0.2;
+let selectedType = "ac";
+let currentTab = "hvac";
+
+/* ================= SMART MODE FACTORS ================= */
+
+const applianceModeFactors = {
+
+  fridge: { off: 0.15 },
+
+  laundry: {
+    no_washer: 0.8,
+    no_dryer: 0.6,
+    cold_wash: 0.3
+  },
+
+  dishwasher: {
+    no_use: 0.5,
+    no_dry: 0.3
+  },
+
+  oven: { off: 0.4 },
+  TV: { off: 0.2 },
+  others: { off: 0.3 }
+
+};
+
+
+/* ================= DATA ================= */
+
+const energyData = {
+
+  hvac: [
+    {type:"ac", name:"AC", img:"ac.jpg", factor:0.2},
+    {type:"fan", name:"Fan", img:"fan.jpg", factor:0.05},
+    {type:"heater", name:"Heating", img:"heater.jpg", factor:0.3}
+  ],
+
+  lighting: [
+    {type:"light", name:"Lighting", img:"Lighting.jpg", factor:0.01}
+  ],
+
+  appliances: [
+    {type:"fridge", name:"Refrigerator", img:"Refrigerator.jpg", factor:0.15},
+    {type:"laundry", name:"Laundry", img:"Laundry.jpg", factor:0.5},
+    {type:"dishwasher", name:"Dishwasher", img:"Dishwasher.jpg", factor:0.4},
+    {type:"oven", name:"Oven", img:"Oven.jpg", factor:0.45},
+    {type:"TV", name:"TV", img:"TV.jpg", factor:0.45},
+    {type:"others", name:"Others", img:"Others.jpg", factor:0.45}
+  ]
+
+};
+
+
+/* ================= TAB SWITCH ================= */
+
+function switchTab(tab, element){
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  element.classList.add("active");
+
+  currentTab = tab;
+
+  loadContent(tab);
+}
+
+
+/* ================= LOAD CONTENT ================= */
+
+function loadContent(tab){
+
+  let container = document.getElementById("energyContent");
+  let data = energyData[tab];
+
+  let html = `<div class="transport-options">`;
+
+  data.forEach((item, index) => {
+    html += `
+      <div class="transport-card ${index === 0 ? 'active' : ''}" 
+           onclick="selectEnergy(this, '${item.type}', ${item.factor}, '${tab}')">
+        <img src="/static/images/${item.img}">
+        <p>${item.name}</p>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  /* ===== HVAC ===== */
+  if(tab === "hvac"){
+
+    html += `
+      <select id="hvacMode" onchange="updateHVACUI()">
+        <option value="off">Switched off AC</option>
+        <option value="temp">Increased temperature setting</option>
+      </select>
+
+      <label>Duration (hours)</label>
+      <input type="range" min="1" max="50" step="0.5" value="1"
+             id="energyRange" oninput="updateEnergy()">
+      <p id="rangeValue">1 hours</p>
+
+      <div id="tempControl" style="display:none;">
+        <label>Temperature Change (°C)</label>
+        <input type="range" min="1" max="10" step="0.5" value="1"
+               id="tempRange" oninput="updateEnergy()">
+        <p id="tempValue">1 °C</p>
+      </div>
+    `;
+  }
+
+  /* ===== LIGHTING ===== */
+  else if(tab === "lighting"){
+
+    html += `
+      <select>
+        <option>Switched off lights</option>
+      </select>
+
+      <label>Duration (hours)</label>
+      <input type="range" min="1" max="50" step="0.5" value="1"
+             id="energyRange" oninput="updateEnergy()">
+
+      <p id="rangeValue">1 hours</p>
+    `;
+  }
+
+  /* ===== APPLIANCES ===== */
+  else{
+
+  /* DEFAULT = FIRST ITEM (Refrigerator) */
+
+  html += `
+    <select id="modeSelect">
+      <option value="off">Did not use refrigerator</option>
+    </select>
+
+    <label>Duration (hours)</label>
+    <input type="range" min="1" max="50" step="0.5" value="1"
+           id="energyRange" oninput="updateEnergy()">
+
+    <p id="rangeValue">1 hours</p>
+  `;
+}
+
+  container.innerHTML = html;
+
+  selectedFactor = data[0].factor;
+  selectedType = data[0].type;
+
+  document.getElementById("energyType").value = selectedType;
+
+  updateEnergy();
+}
+
+
+/* ================= HVAC ================= */
+
+function updateHVACUI(){
+
+  let mode = document.getElementById("hvacMode").value;
+  let tempDiv = document.getElementById("tempControl");
+
+  tempDiv.style.display = (mode === "temp") ? "block" : "none";
+}
+
+
+/* ================= SELECT ================= */
+
+function selectEnergy(card, type, factor, tab){
+
+  document.querySelectorAll(".transport-card")
+    .forEach(c => c.classList.remove("active"));
+
+  card.classList.add("active");
+
+  selectedFactor = factor;
+  selectedType = type;
+
+  document.getElementById("energyType").value = selectedType;
+
+  /* ===== HVAC ===== */
+  if(tab === "hvac"){
+
+    let dropdown = document.getElementById("hvacMode");
+
+    if(type === "fan"){
+      dropdown.innerHTML = `<option value="off">Did not use Fan</option>`;
+      document.getElementById("tempControl").style.display = "none";
+    }
+
+    else if(type === "heater"){
+      dropdown.innerHTML = `
+        <option value="off">Switched off Heater</option>
+        <option value="temp">Reduced temperature setting</option>
+      `;
+    }
+
+    else{
+      dropdown.innerHTML = `
+        <option value="off">Switched off AC</option>
+        <option value="temp">Increased temperature setting</option>
+      `;
+    }
+  }
+
+  /* ===== APPLIANCES SMART UI ===== */
+  if(tab === "appliances"){
+
+    let container = document.getElementById("energyContent");
+    let cardsHTML = container.querySelector(".transport-options").outerHTML;
+
+    let extraHTML = "";
+
+    if(type === "fridge"){
+      extraHTML = `
+        <select id="modeSelect">
+          <option value="off">Did not use refrigerator</option>
+        </select>
+
+        <label>Duration (hours)</label>
+        <input type="range" min="1" max="24" step="0.5" value="1"
+               id="energyRange" oninput="updateEnergy()">
+        <p id="rangeValue">1 hours</p>
+      `;
+    }
+
+    else if(type === "laundry"){
+      extraHTML = `
+        <select id="modeSelect">
+          <option value="no_washer">Did not use washer</option>
+          <option value="no_dryer">Did not use dryer</option>
+          <option value="cold_wash">Used washer without hot water</option>
+        </select>
+
+        <label>Number of Wash Cycles</label>
+        <input type="range" min="1" max="30" step="1" value="1"
+               id="energyRange" oninput="updateEnergy()">
+        <p id="rangeValue">1</p>
+      `;
+    }
+
+    else if(type === "dishwasher"){
+      extraHTML = `
+        <select id="modeSelect">
+          <option value="no_use">Did not use dishwasher</option>
+          <option value="no_dry">Did not use power dry</option>
+        </select>
+
+        <label>Number of Wash Cycles</label>
+        <input type="range" min="1" max="30" step="1" value="1"
+               id="energyRange" oninput="updateEnergy()">
+        <p id="rangeValue">1</p>
+      `;
+    }
+
+    else{
+      extraHTML = `
+        <select id="modeSelect">
+          <option value="off">Did not use</option>
+        </select>
+
+        <label>Duration (hours)</label>
+        <input type="range" min="1" max="24" step="0.5" value="1"
+               id="energyRange" oninput="updateEnergy()">
+        <p id="rangeValue">1 hours</p>
+      `;
+    }
+
+    container.innerHTML = cardsHTML + extraHTML;
+  }
+
+  updateEnergy();
+}
+
+
+/* ================= SMART CALCULATION ================= */
+
+function updateEnergy(){
+
+  let value = parseFloat(document.getElementById("energyRange").value);
+
+  let label = document.getElementById("rangeValue");
+
+  if(label){
+    if(selectedType === "laundry" || selectedType === "dishwasher"){
+      label.innerText = value;
+    } else {
+      label.innerText = value + " hours";
+    }
+  }
+
+  let mode = document.getElementById("modeSelect")
+              ? document.getElementById("modeSelect").value
+              : "off";
+
+  let factor = selectedFactor;
+
+  if(applianceModeFactors[selectedType] && applianceModeFactors[selectedType][mode]){
+    factor = applianceModeFactors[selectedType][mode];
+  }
+
+  let co2 = (value * factor).toFixed(2);
+
+  document.getElementById("co2value").innerText = co2 + " kg CO₂eq";
+
+  document.getElementById("energyValueInput").value = co2;
+}
+
+
+/* ================= INITIAL ================= */
+
+loadContent("hvac");
+
+</script>
+</body>
+</html>
